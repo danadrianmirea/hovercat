@@ -1,6 +1,5 @@
-# Raylib Game Template
+# Raylib Flappy Square
 
-A modern, cross-platform game template built with raylib, supporting both desktop and web builds. This template serves as a foundation for creating games that can be deployed to multiple platforms, including itch.io.
 
 ## Features
 

@@ -67,6 +67,13 @@ void Game::InitGame()
 void Game::Reset()
 {
     InitGame();
+    // Reset bird position and velocity
+    birdX = width / 4;
+    birdY = height / 2;
+    birdVelocity = 0.0f;
+    // Clear all pipes
+    pipes.clear();
+    pipeSpawnTimer = 0.0f;
 }
 
 void Game::Update(float dt)
@@ -89,6 +96,11 @@ void Game::Update(float dt)
         birdVelocity += gravity * dt;
         birdY += birdVelocity * dt;
 
+        // Check for collisions with screen boundaries
+        if (birdY - birdSize/2 < 0 || birdY + birdSize/2 > height) {
+            gameOver = true;
+        }
+
         // Update pipes
         pipeSpawnTimer += dt;
         if (pipeSpawnTimer >= pipeSpawnInterval) {
@@ -97,9 +109,21 @@ void Game::Update(float dt)
             pipes.push_back({(float)width, gapCenter});
         }
 
-        // Move pipes
+        // Move pipes and check collisions
         for (auto& pipe : pipes) {
             pipe.first -= pipeSpeed * dt;
+
+            // Check collision with pipe
+            if (!gameOver) {
+                // Check if bird is within pipe's x range
+                if (birdX + birdSize/2 > pipe.first && birdX - birdSize/2 < pipe.first + pipeWidth) {
+                    // Check if bird is outside the gap
+                    if (birdY - birdSize/2 < pipe.second - pipeGap/2 || 
+                        birdY + birdSize/2 > pipe.second + pipeGap/2) {
+                        gameOver = true;
+                    }
+                }
+            }
         }
 
         // Remove pipes that are off screen
@@ -149,7 +173,7 @@ void Game::UpdateUI()
     }
 #endif
 
-    if(firstTimeGameStart ) {
+    if(firstTimeGameStart) {
         if(isMobile) {
             if(IsGestureDetected(GESTURE_TAP)) {
                 firstTimeGameStart = false;
@@ -190,6 +214,17 @@ void Game::UpdateUI()
     {
         paused = !paused;
     }
+
+    // Handle game over restart
+    if (gameOver) {
+        if (isMobile) {
+            if (IsGestureDetected(GESTURE_TAP)) {
+                Reset();
+            }
+        } else if (IsKeyPressed(KEY_ENTER)) {
+            Reset();
+        }
+    }
 }
 
 void Game::Draw()
@@ -228,7 +263,7 @@ void Game::DrawUI()
     float screenY = 0.0f;
 
     // DrawRectangleRoundedLines({borderOffsetWidth, borderOffsetHeight, gameScreenWidth - borderOffsetWidth * 2, gameScreenHeight - borderOffsetHeight * 2}, 0.18f, 20, 2, yellow);
-    DrawTextEx(font, "Adrian's Raylib Template", {300, 10}, 34, 2, yellow);
+    DrawTextEx(font, "Flappy Square", {300, 10}, 34, 2, yellow);
 
     if (exitWindowRequested)
     {
