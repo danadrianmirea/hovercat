@@ -263,7 +263,7 @@ void Game::DrawUI()
     float screenY = 0.0f;
 
     // DrawRectangleRoundedLines({borderOffsetWidth, borderOffsetHeight, gameScreenWidth - borderOffsetWidth * 2, gameScreenHeight - borderOffsetHeight * 2}, 0.18f, 20, 2, yellow);
-    DrawTextEx(font, "Flappy Square", {300, 10}, 34, 2, yellow);
+    DrawTextEx(font, "Flappy Square", {300, 10}, 44, 2, BLACK);
 
     if (exitWindowRequested)
     {
