@@ -340,11 +340,12 @@ void Game::DrawUI()
     {
         DrawRectangleRounded({screenX + (float)(gameScreenWidth / 2 - 250), screenY + (float)(gameScreenHeight / 2 - 20), 500, 100}, 0.76f, 20, BLACK);
         std::string gameOverText = "Game Over! Score: " + std::to_string(score);
-        DrawText(gameOverText.c_str(), screenX + (gameScreenWidth / 2 - 150), screenY + gameScreenHeight / 2 - 20, 20, yellow);
+        int gameOverTextWidth = MeasureText(gameOverText.c_str(), 20);
+        DrawText(gameOverText.c_str(), screenX + (gameScreenWidth / 2 - gameOverTextWidth/2), screenY + gameScreenHeight / 2 - 10, 20, yellow);
         if (isMobile) {
-            DrawText("Tap to play again", screenX + (gameScreenWidth / 2 - 100), screenY + gameScreenHeight / 2 + 20, 20, yellow);
+            DrawText("Tap to play again", screenX + (gameScreenWidth / 2 - 100), screenY + gameScreenHeight / 2 + 30, 20, yellow);
         } else {
-            DrawText("Press Enter to play again", screenX + (gameScreenWidth / 2 - 120), screenY + gameScreenHeight / 2 + 20, 20, yellow);
+            DrawText("Press Enter to play again", screenX + (gameScreenWidth / 2 - 120), screenY + gameScreenHeight / 2 + 30, 20, yellow);
         }
     }
 }
