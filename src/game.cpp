@@ -3,6 +3,7 @@
 #include <string>
 #include <cmath>  // For sqrtf
 #include <algorithm> // For std::remove_if
+#include <fstream>
 
 #include "raylib.h"
 #include "globals.h"
@@ -30,6 +31,10 @@ Game::Game(int width, int height)
     pipeSpeed = 200.0f;
     pipeSpawnTimer = 0.0f;
     pipeSpawnInterval = 2.0f;
+
+    // Initialize score
+    score = 0;
+    LoadHighScore();
 
 #ifdef __EMSCRIPTEN__
     // Check if we're running on a mobile device
@@ -74,6 +79,8 @@ void Game::Reset()
     // Clear all pipes
     pipes.clear();
     pipeSpawnTimer = 0.0f;
+    // Reset score
+    score = 0;
 }
 
 void Game::Update(float dt)
@@ -99,6 +106,10 @@ void Game::Update(float dt)
         // Check for collisions with screen boundaries
         if (birdY - birdSize/2 < 0 || birdY + birdSize/2 > height) {
             gameOver = true;
+            if (score > highScore) {
+                highScore = score;
+                SaveHighScore();
+            }
         }
 
         // Update pipes
@@ -106,21 +117,35 @@ void Game::Update(float dt)
         if (pipeSpawnTimer >= pipeSpawnInterval) {
             pipeSpawnTimer = 0.0f;
             float gapCenter = GetRandomValue(pipeGap/2, height - pipeGap/2);
-            pipes.push_back({(float)width, gapCenter});
+            pipes.push_back({(float)width, gapCenter, false});
         }
 
         // Move pipes and check collisions
         for (auto& pipe : pipes) {
-            pipe.first -= pipeSpeed * dt;
+            pipe.x -= pipeSpeed * dt;
+
+            // Check if bird has passed the pipe
+            if (birdX > pipe.x + pipeWidth && !pipe.scored) {
+                score++;
+                pipe.scored = true;
+                if (score > highScore) {
+                    highScore = score;
+                    SaveHighScore();
+                }
+            }
 
             // Check collision with pipe
             if (!gameOver) {
                 // Check if bird is within pipe's x range
-                if (birdX + birdSize/2 > pipe.first && birdX - birdSize/2 < pipe.first + pipeWidth) {
+                if (birdX + birdSize/2 > pipe.x && birdX - birdSize/2 < pipe.x + pipeWidth) {
                     // Check if bird is outside the gap
-                    if (birdY - birdSize/2 < pipe.second - pipeGap/2 || 
-                        birdY + birdSize/2 > pipe.second + pipeGap/2) {
+                    if (birdY - birdSize/2 < pipe.gapCenter - pipeGap/2 || 
+                        birdY + birdSize/2 > pipe.gapCenter + pipeGap/2) {
                         gameOver = true;
+                        if (score > highScore) {
+                            highScore = score;
+                            SaveHighScore();
+                        }
                     }
                 }
             }
@@ -128,7 +153,7 @@ void Game::Update(float dt)
 
         // Remove pipes that are off screen
         pipes.erase(std::remove_if(pipes.begin(), pipes.end(), 
-            [this](const auto& pipe) { return pipe.first < -this->pipeWidth; }), 
+            [this](const auto& pipe) { return pipe.x < -this->pipeWidth; }), 
             pipes.end());
     }
 }
@@ -236,9 +261,9 @@ void Game::Draw()
     // Draw pipes
     for (const auto& pipe : pipes) {
         // Top pipe
-        DrawRectangle(pipe.first, 0, pipeWidth, pipe.second - pipeGap/2, GREEN);
+        DrawRectangle(pipe.x, 0, pipeWidth, pipe.gapCenter - pipeGap/2, GREEN);
         // Bottom pipe
-        DrawRectangle(pipe.first, pipe.second + pipeGap/2, pipeWidth, height - (pipe.second + pipeGap/2), GREEN);
+        DrawRectangle(pipe.x, pipe.gapCenter + pipeGap/2, pipeWidth, height - (pipe.gapCenter + pipeGap/2), GREEN);
     }
 
     // Draw bird
@@ -262,8 +287,17 @@ void Game::DrawUI()
     float screenX = 0.0f;
     float screenY = 0.0f;
 
-    // DrawRectangleRoundedLines({borderOffsetWidth, borderOffsetHeight, gameScreenWidth - borderOffsetWidth * 2, gameScreenHeight - borderOffsetHeight * 2}, 0.18f, 20, 2, yellow);
     DrawTextEx(font, "Flappy Square", {300, 10}, 44, 2, BLACK);
+
+    // Draw score on the right side
+    std::string scoreText = "Score: " + std::to_string(score);
+    std::string highScoreText = "High Score: " + std::to_string(highScore);
+    int scoreWidth = MeasureText(scoreText.c_str(), 20);
+    int highScoreWidth = MeasureText(highScoreText.c_str(), 20);
+    int rightPadding = 20;
+    
+    DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, BLACK);
+    DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, BLACK);
 
     if (exitWindowRequested)
     {
@@ -304,11 +338,13 @@ void Game::DrawUI()
     }
     else if (gameOver)
     {
-        DrawRectangleRounded({screenX + (float)(gameScreenWidth / 2 - 250), screenY + (float)(gameScreenHeight / 2 - 20), 500, 60}, 0.76f, 20, BLACK);
+        DrawRectangleRounded({screenX + (float)(gameScreenWidth / 2 - 250), screenY + (float)(gameScreenHeight / 2 - 20), 500, 100}, 0.76f, 20, BLACK);
+        std::string gameOverText = "Game Over! Score: " + std::to_string(score);
+        DrawText(gameOverText.c_str(), screenX + (gameScreenWidth / 2 - 150), screenY + gameScreenHeight / 2 - 20, 20, yellow);
         if (isMobile) {
-            DrawText("Game over, tap to play again", screenX + (gameScreenWidth / 2 - 200), screenY + gameScreenHeight / 2, 20, yellow);
+            DrawText("Tap to play again", screenX + (gameScreenWidth / 2 - 100), screenY + gameScreenHeight / 2 + 20, 20, yellow);
         } else {
-            DrawText("Game over, press Enter to play again", screenX + (gameScreenWidth / 2 - 200), screenY + gameScreenHeight / 2, 20, yellow);
+            DrawText("Press Enter to play again", screenX + (gameScreenWidth / 2 - 120), screenY + gameScreenHeight / 2 + 20, 20, yellow);
         }
     }
 }
@@ -323,4 +359,30 @@ std::string Game::FormatWithLeadingZeroes(int number, int width)
 
 void Game::Randomize()
 {
+}
+
+void Game::LoadHighScore()
+{
+#ifndef __EMSCRIPTEN__
+    std::ifstream file("highscore.txt");
+    if (file.is_open()) {
+        file >> highScore;
+        file.close();
+    } else {
+        highScore = 0;
+    }
+#else
+    highScore = 0;
+#endif
+}
+
+void Game::SaveHighScore()
+{
+#ifndef __EMSCRIPTEN__
+    std::ofstream file("highscore.txt");
+    if (file.is_open()) {
+        file << highScore;
+        file.close();
+    }
+#endif
 }

@@ -2,7 +2,14 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 #include "raylib.h"
+
+struct Pipe {
+    float x;
+    float gapCenter;
+    bool scored;
+};
 
 class Game
 {
@@ -36,6 +43,12 @@ private:
     int width;
     int height;
 
+    // Score system
+    int score;
+    int highScore;
+    void LoadHighScore();
+    void SaveHighScore();
+
     float ballX;
     float ballY;
     int ballRadius;
@@ -52,7 +65,7 @@ private:
     float pipeWidth;
     float pipeGap;
     float pipeSpeed;
-    std::vector<std::pair<float, float>> pipes; // x position and gap center y position
+    std::vector<Pipe> pipes;
     float pipeSpawnTimer;
     float pipeSpawnInterval;
 };
