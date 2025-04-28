@@ -2,6 +2,7 @@
 #include <utility>
 #include <string>
 #include <cmath>  // For sqrtf
+#include <algorithm> // For std::remove_if
 
 #include "raylib.h"
 #include "globals.h"
@@ -17,11 +18,18 @@ Game::Game(int width, int height)
 {
     firstTimeGameStart = true;
 
-    ballX = width / 2;
-    ballY = height / 2;
-    ballRadius = 50;
-    ballSpeed = 300.0f;
-    ballColor = RED;
+    // Initialize Flappy Bird variables
+    birdSize = 30.0f;
+    birdX = width / 4;
+    birdY = height / 2;
+    birdVelocity = 0.0f;
+    gravity = 800.0f;
+    jumpForce = -400.0f;
+    pipeWidth = 80.0f;
+    pipeGap = 200.0f;
+    pipeSpeed = 200.0f;
+    pipeSpawnTimer = 0.0f;
+    pipeSpawnInterval = 2.0f;
 
 #ifdef __EMSCRIPTEN__
     // Check if we're running on a mobile device
@@ -31,7 +39,7 @@ Game::Game(int width, int height)
 #endif
 
     targetRenderTex = LoadRenderTexture(gameScreenWidth, gameScreenHeight);
-    SetTextureFilter(targetRenderTex.texture, TEXTURE_FILTER_BILINEAR); // Texture scale filter to use
+    SetTextureFilter(targetRenderTex.texture, TEXTURE_FILTER_BILINEAR);
 
     font = LoadFontEx("Font/monogram.ttf", 64, 0, 0);
 
@@ -76,50 +84,42 @@ void Game::Update(float dt)
     if (running)
     {
         HandleInput();
+        
+        // Update bird physics
+        birdVelocity += gravity * dt;
+        birdY += birdVelocity * dt;
+
+        // Update pipes
+        pipeSpawnTimer += dt;
+        if (pipeSpawnTimer >= pipeSpawnInterval) {
+            pipeSpawnTimer = 0.0f;
+            float gapCenter = GetRandomValue(pipeGap/2, height - pipeGap/2);
+            pipes.push_back({(float)width, gapCenter});
+        }
+
+        // Move pipes
+        for (auto& pipe : pipes) {
+            pipe.first -= pipeSpeed * dt;
+        }
+
+        // Remove pipes that are off screen
+        pipes.erase(std::remove_if(pipes.begin(), pipes.end(), 
+            [this](const auto& pipe) { return pipe.first < -this->pipeWidth; }), 
+            pipes.end());
     }
 }
 
 void Game::HandleInput()
 {
-    float dt = GetFrameTime();
-
     if(!isMobile) { // desktop and web controls
-        if(IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) {
-            ballY -= ballSpeed * dt;
-        }
-    else if(IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) {
-        ballY += ballSpeed * dt;
-    }
-
-    if(IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-        ballX -= ballSpeed * dt;
-    }
-        else if(IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-            ballX += ballSpeed * dt;
+        if(IsKeyPressed(KEY_SPACE)) {
+            birdVelocity = jumpForce;
         }
     } 
     else // mobile controls
     {
-        if(IsGestureDetected(GESTURE_DRAG) || IsGestureDetected(GESTURE_HOLD)) {
-            // Get touch position in screen coordinates
-            Vector2 touchPosition = GetTouchPosition(0);
-            
-            // Convert screen coordinates to game coordinates
-            float gameX = (touchPosition.x - (GetScreenWidth() - (gameScreenWidth * screenScale)) * 0.5f) / screenScale;
-            float gameY = (touchPosition.y - (GetScreenHeight() - (gameScreenHeight * screenScale)) * 0.5f) / screenScale;
-            
-            Vector2 ballCenter = { ballX, ballY };
-            Vector2 direction = { gameX - ballCenter.x, gameY - ballCenter.y };
-            
-            // Normalize the direction vector
-            float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
-            if(length > 0) {
-                direction.x /= length;
-                direction.y /= length;
-                
-                ballX += direction.x * ballSpeed * dt;
-                ballY += direction.y * ballSpeed * dt;
-            }
+        if(IsGestureDetected(GESTURE_TAP)) {
+            birdVelocity = jumpForce;
         }
     }
 }
@@ -196,9 +196,18 @@ void Game::Draw()
 {
     // render everything to a texture
     BeginTextureMode(targetRenderTex);
-    ClearBackground(GRAY);
+    ClearBackground(SKYBLUE);
 
-    DrawCircle(ballX, ballY, ballRadius, ballColor);
+    // Draw pipes
+    for (const auto& pipe : pipes) {
+        // Top pipe
+        DrawRectangle(pipe.first, 0, pipeWidth, pipe.second - pipeGap/2, GREEN);
+        // Bottom pipe
+        DrawRectangle(pipe.first, pipe.second + pipeGap/2, pipeWidth, height - (pipe.second + pipeGap/2), GREEN);
+    }
+
+    // Draw bird
+    DrawRectangle(birdX - birdSize/2, birdY - birdSize/2, birdSize, birdSize, YELLOW);
 
     DrawUI();
 

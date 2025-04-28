@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include "raylib.h"
 
 class Game
 {
@@ -39,4 +41,18 @@ private:
     int ballRadius;
     float ballSpeed;
     Color ballColor;
+
+    // Flappy Bird variables
+    float birdX;
+    float birdY;
+    float birdSize;
+    float birdVelocity;
+    float gravity;
+    float jumpForce;
+    float pipeWidth;
+    float pipeGap;
+    float pipeSpeed;
+    std::vector<std::pair<float, float>> pipes; // x position and gap center y position
+    float pipeSpawnTimer;
+    float pipeSpawnInterval;
 };
