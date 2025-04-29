@@ -337,6 +337,20 @@ void Game::UpdateUI()
             Reset();
         }
     }
+
+    // Handle pausing/unpausing on mobile with tap
+    if (isMobile && !firstTimeGameStart && !gameOver && !exitWindowRequested) {
+        if (!paused && IsGestureDetected(GESTURE_TAP)) {
+            // Get tap position
+            Vector2 tapPos = GetTouchPosition(0);
+            // Check if tap is in the title bar area
+            if (tapPos.x >= 0 && tapPos.x < gameScreenWidth && tapPos.y >= 0 && tapPos.y < 100) {
+                paused = true;
+            }
+        } else if (paused && IsGestureDetected(GESTURE_TAP)) {
+            paused = false;
+        }
+    }
 }
 
 void Game::Draw()
@@ -527,7 +541,9 @@ void Game::DrawUI()
 #endif
         } else {
             DrawText("- Tap to flap", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
-            y += 30+30+40;
+            y += 30;
+            DrawText("- Tap title bar to pause", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);  
+            y += 70;
             DrawText("Tap to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);
         }
     }
