@@ -1,30 +1,52 @@
-# Raylib Flappy Kat
+# Flappy Kat
 
+A modern, cross-platform remake of Flappy Bird using [raylib](https://www.raylib.com/).
+
+---
 
 ## Features
 
-- **Cross-Platform Support**: Build for desktop and web platforms
-- **Responsive Design**: Dynamic resizing support for desktop, web, and mobile web
-- **Render to Texture**: Advanced rendering approach for consistent visuals across platforms
-- **Automated Builds**: Automatic zip generation for easy itch.io deployment
-- **CMake Integration**: Modern build system for desktop platforms
-- **Emscripten Support**: Web builds via Emscripten
+- **Modern Graphics**: Smooth parallax background, animated player, and graphical pipes.
+- **Responsive Controls**: Keyboard and mobile touch support.
+- **Mobile & Desktop**: Runs on Windows, Linux, macOS, and the web (Emscripten).
+- **Pause & Resume**: Tap the title bar on mobile to pause, tap anywhere to resume.
+- **Customizable**: Easily tweak player, pipe, and background parameters.
+- **High Score Tracking**: Keeps your best score between sessions.
+- **Debug Tools**: Optional collision box display for development.
+
+---
+
+## Controls
+
+### Desktop
+- **Flap**: `Space`, `W`, or `Up Arrow`
+- **Pause**: `P`
+- **Exit**: `Esc`
+- **Fullscreen**: `Alt+Enter`
+- **Start/Restart**: `Enter`
+
+### Mobile/Web
+- **Flap**: Tap anywhere on the game area
+- **Pause**: Tap the top (title bar) area
+- **Resume**: Tap anywhere
+
+---
 
 ## Building the Project
 
 ### Desktop Build (CMake)
 
 1. Create a build directory:
-```bash
-mkdir build
-cd build
-```
+    ```bash
+    mkdir build
+    cd build
+    ```
 
 2. Configure and build:
-```bash
-cmake ..
-cmake --build . --config Release
-```
+    ```bash
+    cmake ..
+    cmake --build . --config Release
+    ```
 
 The executable will be created in the `build` directory.
 
@@ -40,43 +62,37 @@ This will:
 - Generate a web-compatible build
 - Create a `web-build.zip` file ready for itch.io deployment
 
+---
+
 ## Project Structure
 
 - `src/`: Source code directory
 - `lib/`: Library dependencies
 - `Font/`: Font assets
+- `Data/`: Game assets (images, sounds)
 - `build/`: Desktop build output
 - `web-build/`: Web build output
 - `CMakeLists.txt`: CMake build configuration
 - `build_web.sh`: Web build script
 - `custom_shell.html`: Custom HTML shell for web builds
 
-## Deployment
-
-### itch.io Deployment
-
-The build system automatically generates zip files:
-- Desktop builds: Located in the `build` directory
-- Web builds: `web-build.zip` is created after running `build_web.sh`
-
-These zip files can be directly uploaded to itch.io for distribution.
+---
 
 ## Technical Details
 
-### Render to Texture Approach
+- **Render to Texture**: Ensures consistent visuals and scaling across platforms.
+- **Dynamic Resizing**: Handles window and orientation changes on all platforms.
+- **Asset Pipeline**: Uses TTF fonts and PNG images for crisp, scalable graphics.
 
-The template uses a render-to-texture approach to ensure:
-- Consistent visuals across different screen sizes
-- Proper scaling on mobile devices
-- Smooth resizing on desktop platforms
+---
 
-### Dynamic Resizing
+## Credits
 
-The game automatically handles:
-- Window resizing on desktop
-- Browser window resizing
-- Mobile device orientation changes
-- Different screen resolutions
+- **Code & Design**: [Your Name or Team]
+- **Art & Sound**: [Attribution for any third-party assets]
+- **Powered by**: [raylib](https://www.raylib.com/)
+
+---
 
 ## License
 
