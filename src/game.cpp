@@ -51,7 +51,8 @@ Game::Game(int width, int height)
     score = 0;
     LoadHighScore();
 
-    playerCollisionHeightRatio = 0.65f;
+    playerCollisionWidthRatio = 0.70f;
+    playerCollisionHeightRatio = 0.55f;
 
 #ifdef __EMSCRIPTEN__
     // Check if we're running on a mobile device
@@ -173,7 +174,7 @@ void Game::Update(float dt)
         playerY += playerVelocity * dt;
 
         // Calculate collision box dimensions
-        float collisionBoxWidth = playerSize;
+        float collisionBoxWidth = playerSize * playerCollisionWidthRatio;
         float collisionBoxHeight = playerSize * playerCollisionHeightRatio;
 
         // Check for collisions with screen boundaries using collision box
@@ -462,7 +463,7 @@ void Game::Draw()
 
 #ifdef DEBUG
     // Draw player collision box for debugging (red outline)
-    float collisionBoxWidth = playerSize;
+    float collisionBoxWidth = playerSize * playerCollisionWidthRatio;
     float collisionBoxHeight = playerSize * playerCollisionHeightRatio;
     DrawRectangleLines(
         (int)(playerX - collisionBoxWidth/2),

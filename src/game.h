@@ -90,7 +90,8 @@ private:
     float playerEyesClosedTimer; // Time left to display eyes closed
     const float playerEyesClosedDuration = 0.33f; // Duration in seconds
 
-    float playerCollisionHeightRatio; // Ratio of collision box height to width (configurable)
+    float playerCollisionWidthRatio; 
+    float playerCollisionHeightRatio;
 
     Texture2D pipeTexture;
 };
