@@ -1,4 +1,4 @@
-# Raylib Flappy Square
+# Raylib Flappy Kat
 
 
 ## Features

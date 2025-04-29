@@ -13,6 +13,8 @@
 #include <emscripten.h>
 #endif
 
+//#define DEBUG
+
 bool Game::isMobile = false;
 
 Game::Game(int width, int height)
@@ -23,14 +25,14 @@ Game::Game(int width, int height)
     InitAudioDevice();
 
     // Initialize Flappy Bird variables
-    birdSize = 30.0f;
-    birdX = width / 4;
-    birdY = height / 2;
-    birdVelocity = 0.0f;
+    playerSize = 80.0f;
+    playerX = width / 4;
+    playerY = height / 2;
+    playerVelocity = 0.0f;
     gravity = 800.0f;
     jumpForce = -400.0f;
     pipeWidth = 80.0f;
-    pipeGap = 200.0f;
+    pipeGap = 230.0f;
     pipeSpeed = 200.0f;
     basePipeSpeed = pipeSpeed;  // Store initial speed
     speedLevel = 0;             // Start at level 0
@@ -49,6 +51,8 @@ Game::Game(int width, int height)
     score = 0;
     LoadHighScore();
 
+    playerCollisionHeightRatio = 0.65f;
+
 #ifdef __EMSCRIPTEN__
     // Check if we're running on a mobile device
     isMobile = EM_ASM_INT({
@@ -59,22 +63,40 @@ Game::Game(int width, int height)
     targetRenderTex = LoadRenderTexture(gameScreenWidth, gameScreenHeight);
     SetTextureFilter(targetRenderTex.texture, TEXTURE_FILTER_BILINEAR);
 
-    font = LoadFontEx("Font/monogram.ttf", 64, 0, 0);
+    font = LoadFontEx("Font/monogram.ttf", 128, 0, 0);
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 
     this->width = width;
     this->height = height;
+
+    // Background initialization
+    backgroundTexture = LoadTexture("data/background.jpg");
+    backgroundScrollX = 0.0f;
+    backgroundScrollSpeed = 40.0f; 
+    playerTexture = LoadTexture("data/redkat_eyes_open.png");
+    playerTextureEyesClosed = LoadTexture("data/redkat_eyes_closed.png");
+    playerEyesClosedTimer = 0.0f;
     InitGame();
+
+    pipeTexture = LoadTexture("data/pipe.png");
 }
 
 Game::~Game()
 {
     UnloadRenderTexture(targetRenderTex);
     UnloadFont(font);
+
+    // Unload background texture
+    UnloadTexture(backgroundTexture);
+
     // Unload sounds
     UnloadMusicStream(gameMusic);
     UnloadSound(flySound);
     UnloadSound(hitSound);
     UnloadSound(scoreSound);
+    UnloadTexture(playerTexture);
+    UnloadTexture(playerTextureEyesClosed);
+    UnloadTexture(pipeTexture);
     // Close audio device
     CloseAudioDevice();
 }
@@ -92,10 +114,10 @@ void Game::InitGame()
 void Game::Reset()
 {
     InitGame();
-    // Reset bird position and velocity
-    birdX = width / 4;
-    birdY = height / 2;
-    birdVelocity = 0.0f;
+    // Reset player position and velocity
+    playerX = width / 4;
+    playerY = height / 2;
+    playerVelocity = 0.0f;
     // Clear all pipes
     pipes.clear();
     pipeSpawnTimer = 0.0f;
@@ -122,6 +144,13 @@ void Game::Update(float dt)
 
     bool running = (firstTimeGameStart == false && paused == false && lostWindowFocus == false && isInExitMenu == false && gameOver == false);
 
+    // Only scroll background when running
+    if (running) {
+        backgroundScrollX += backgroundScrollSpeed * dt;
+        if (backgroundScrollX >= backgroundTexture.width)
+            backgroundScrollX -= backgroundTexture.width;
+    }
+
     // Handle music playback
     if (running && !musicPlaying) {
         PlayMusicStream(gameMusic);
@@ -139,12 +168,16 @@ void Game::Update(float dt)
     {
         HandleInput();
         
-        // Update bird physics
-        birdVelocity += gravity * dt;
-        birdY += birdVelocity * dt;
+        // Update player physics
+        playerVelocity += gravity * dt;
+        playerY += playerVelocity * dt;
 
-        // Check for collisions with screen boundaries
-        if (birdY - birdSize/2 < 0 || birdY + birdSize/2 > height) {
+        // Calculate collision box dimensions
+        float collisionBoxWidth = playerSize;
+        float collisionBoxHeight = playerSize * playerCollisionHeightRatio;
+
+        // Check for collisions with screen boundaries using collision box
+        if (playerY - collisionBoxHeight/2 < 0 || playerY + collisionBoxHeight/2 > height) {
             gameOver = true;
             // Stop all sounds before playing hit sound
             StopMusicStream(gameMusic);
@@ -169,8 +202,8 @@ void Game::Update(float dt)
         for (auto& pipe : pipes) {
             pipe.x -= pipeSpeed * dt;
 
-            // Check if bird has passed the pipe
-            if (birdX > pipe.x + pipeWidth && !pipe.scored) {
+            // Check if player has passed the pipe
+            if (playerX > pipe.x + pipeWidth && !pipe.scored) {
                 score++;
                 pipe.scored = true;
                 PlaySound(scoreSound);
@@ -181,13 +214,13 @@ void Game::Update(float dt)
                 }
             }
 
-            // Check collision with pipe
+            // Check collision with pipe using collision box
             if (!gameOver) {
-                // Check if bird is within pipe's x range
-                if (birdX + birdSize/2 > pipe.x && birdX - birdSize/2 < pipe.x + pipeWidth) {
-                    // Check if bird is outside the gap
-                    if (birdY - birdSize/2 < pipe.gapCenter - pipeGap/2 || 
-                        birdY + birdSize/2 > pipe.gapCenter + pipeGap/2) {
+                // Check if player is within pipe's x range
+                if (playerX + collisionBoxWidth/2 > pipe.x && playerX - collisionBoxWidth/2 < pipe.x + pipeWidth) {
+                    // Check if player is outside the gap
+                    if (playerY - collisionBoxHeight/2 < pipe.gapCenter - pipeGap/2 || 
+                        playerY + collisionBoxHeight/2 > pipe.gapCenter + pipeGap/2) {
                         gameOver = true;
                         // Stop all sounds before playing hit sound
                         StopMusicStream(gameMusic);
@@ -207,6 +240,11 @@ void Game::Update(float dt)
         pipes.erase(std::remove_if(pipes.begin(), pipes.end(), 
             [this](const auto& pipe) { return pipe.x < -this->pipeWidth; }), 
             pipes.end());
+
+        if (playerEyesClosedTimer > 0.0f) {
+            playerEyesClosedTimer -= dt;
+            if (playerEyesClosedTimer < 0.0f) playerEyesClosedTimer = 0.0f;
+        }
     }
 }
 
@@ -214,14 +252,16 @@ void Game::HandleInput()
 {
     if(!isMobile) { // desktop and web controls
         if(IsKeyPressed(KEY_SPACE)) {
-            birdVelocity = jumpForce;
+            playerVelocity = jumpForce;
+            playerEyesClosedTimer = playerEyesClosedDuration;
             PlaySound(flySound);
         }
     } 
     else // mobile controls
     {
         if(IsGestureDetected(GESTURE_TAP)) {
-            birdVelocity = jumpForce;
+            playerVelocity = jumpForce;
+            playerEyesClosedTimer = playerEyesClosedDuration;
             PlaySound(flySound);
         }
     }
@@ -310,19 +350,121 @@ void Game::Draw()
 {
     // render everything to a texture
     BeginTextureMode(targetRenderTex);
-    ClearBackground(SKYBLUE);
 
-    // Draw pipes
-    for (const auto& pipe : pipes) {
-        // Top pipe
-        DrawRectangle(pipe.x, 0, pipeWidth, pipe.gapCenter - pipeGap/2, GREEN);
-        // Bottom pipe
-        DrawRectangle(pipe.x, pipe.gapCenter + pipeGap/2, pipeWidth, height - (pipe.gapCenter + pipeGap/2), GREEN);
+    // Draw scrolling background (revert to original logic)
+    float srcX = backgroundScrollX;
+    float srcWidth = (float)gameScreenWidth;
+    if (srcX + srcWidth <= backgroundTexture.width) {
+        // No wrap needed
+        DrawTexturePro(
+            backgroundTexture,
+            { srcX, 0, srcWidth, (float)gameScreenHeight },
+            { 0, 0, srcWidth, (float)gameScreenHeight },
+            { 0, 0 }, 0.0f, WHITE
+        );
+    } else {
+        // Wrap around
+        float firstPart = backgroundTexture.width - srcX;
+        DrawTexturePro(
+            backgroundTexture,
+            { srcX, 0, firstPart, (float)gameScreenHeight },
+            { 0, 0, firstPart, (float)gameScreenHeight },
+            { 0, 0 }, 0.0f, WHITE
+        );
+        DrawTexturePro(
+            backgroundTexture,
+            { 0, 0, srcWidth - firstPart, (float)gameScreenHeight },
+            { firstPart, 0, srcWidth - firstPart, (float)gameScreenHeight },
+            { 0, 0 }, 0.0f, WHITE
+        );
     }
 
-    // Draw bird
-    DrawRectangle(birdX - birdSize/2, birdY - birdSize/2, birdSize, birdSize, YELLOW);
+    // Draw pipes with graphics
+    for (const auto& pipe : pipes) {
+        float topPipeHeight = pipe.gapCenter - pipeGap/2;
+        float bottomPipeY = pipe.gapCenter + pipeGap/2;
+        float bottomPipeHeight = height - bottomPipeY;
 
+        int capHeight = 24; // Set this to the cap height in your image
+        int pipeImgWidth = pipeTexture.width;
+        int pipeImgHeight = pipeTexture.height;
+        int bodyHeight = pipeImgHeight - capHeight;
+
+        // Draw top pipe (flipped vertically)
+        if (topPipeHeight > 0) {
+            // Draw body (stretched)
+            float bodyDrawHeight = topPipeHeight - capHeight;
+            if (bodyDrawHeight > 0) {
+                DrawTexturePro(
+                    pipeTexture,
+                    { 0, (float)capHeight, (float)pipeImgWidth, (float)bodyHeight },
+                    { pipe.x, 0, pipeWidth, bodyDrawHeight },
+                    { 0, 0 }, 0.0f, WHITE
+                );
+            }
+            // Draw cap (flipped)
+            DrawTexturePro(
+                pipeTexture,
+                { 0, 0, (float)pipeImgWidth, (float)capHeight },
+                { pipe.x, bodyDrawHeight, pipeWidth, (float)capHeight },
+                { 0, 0 }, 0.0f, WHITE
+            );
+        }
+
+        // Draw bottom pipe (normal)
+        if (bottomPipeHeight > 0) {
+            // Draw body (stretched)
+            float bodyDrawHeight = bottomPipeHeight - capHeight;
+            if (bodyDrawHeight > 0) {
+                DrawTexturePro(
+                    pipeTexture,
+                    { 0, (float)capHeight, (float)pipeImgWidth, (float)bodyHeight },
+                    { pipe.x, bottomPipeY + (float)capHeight, pipeWidth, bodyDrawHeight },
+                    { 0, 0 }, 0.0f, WHITE
+                );
+            }
+            // Draw cap (normal)
+            DrawTexturePro(
+                pipeTexture,
+                { 0, 0, (float)pipeImgWidth, (float)capHeight },
+                { pipe.x, bottomPipeY, pipeWidth, (float)capHeight },
+                { 0, 0 }, 0.0f, WHITE
+            );
+        }
+    }
+
+    // Choose player texture:
+    Texture2D currentPlayerTexture;
+    if (gameOver) {
+        // If crashed, always show eyes closed
+        currentPlayerTexture = playerTextureEyesClosed;
+    } else if (playerEyesClosedTimer > 0.0f) {
+        // If flapping, show eyes closed
+        currentPlayerTexture = playerTextureEyesClosed;
+    } else {
+        // Otherwise, show eyes open
+        currentPlayerTexture = playerTexture;
+    }
+
+    DrawTexturePro(
+        currentPlayerTexture,
+        { 0, 0, (float)currentPlayerTexture.width, (float)currentPlayerTexture.height },
+        { playerX - playerSize/2, playerY - playerSize/2, playerSize, playerSize },
+        { 0, 0 }, 0.0f, WHITE
+    );
+
+#ifdef DEBUG
+    // Draw player collision box for debugging (red outline)
+    float collisionBoxWidth = playerSize;
+    float collisionBoxHeight = playerSize * playerCollisionHeightRatio;
+    DrawRectangleLines(
+        (int)(playerX - collisionBoxWidth/2),
+        (int)(playerY - collisionBoxHeight/2),
+        (int)collisionBoxWidth,
+        (int)collisionBoxHeight,
+        RED
+    );
+#endif
     DrawUI();
 
     EndTextureMode();
@@ -330,9 +472,10 @@ void Game::Draw()
     // render the scaled frame texture to the screen
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawTexturePro(targetRenderTex.texture, (Rectangle){0.0f, 0.0f, (float)targetRenderTex.texture.width, (float)-targetRenderTex.texture.height},
-                   (Rectangle){(GetScreenWidth() - ((float)gameScreenWidth * screenScale)) * 0.5f, (GetScreenHeight() - ((float)gameScreenHeight * screenScale)) * 0.5f, (float)gameScreenWidth * screenScale, (float)gameScreenHeight * screenScale},
-                   (Vector2){0, 0}, 0.0f, WHITE);
+    DrawTexturePro(targetRenderTex.texture, 
+        (Rectangle){0.0f, 0.0f, (float)targetRenderTex.texture.width, (float)-targetRenderTex.texture.height},
+        (Rectangle){(GetScreenWidth() - ((float)gameScreenWidth * screenScale)) * 0.5f, (GetScreenHeight() - ((float)gameScreenHeight * screenScale)) * 0.5f, (float)gameScreenWidth * screenScale, (float)gameScreenHeight * screenScale},
+        (Vector2){0, 0}, 0.0f, WHITE);
     EndDrawing();
 }
 
@@ -341,7 +484,7 @@ void Game::DrawUI()
     float screenX = 0.0f;
     float screenY = 0.0f;
 
-    DrawTextEx(font, "Flappy Square", {300, 10}, 44, 2, BLACK);
+    DrawTextEx(font, "Flappy Kat", {300, 10}, 44, 2, RED);
 
     // Draw score on the right side
     std::string scoreText = "Score: " + std::to_string(score);
@@ -350,8 +493,8 @@ void Game::DrawUI()
     int highScoreWidth = MeasureText(highScoreText.c_str(), 20);
     int rightPadding = 20;
     
-    DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, BLACK);
-    DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, BLACK);
+    DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, RED);
+    DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, RED);
 
     if (exitWindowRequested)
     {

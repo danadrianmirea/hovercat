@@ -55,11 +55,11 @@ private:
     float ballSpeed;
     Color ballColor;
 
-    // Flappy Bird variables
-    float birdX;
-    float birdY;
-    float birdSize;
-    float birdVelocity;
+    // Game variables
+    float playerX;
+    float playerY;
+    float playerSize;
+    float playerVelocity;
     float gravity;
     float jumpForce;
     float pipeWidth;
@@ -79,4 +79,18 @@ private:
     bool musicPlaying;
 
     void UpdatePipeSpeed();  // Add function to update pipe speed
+
+    // Background scrolling
+    Texture2D backgroundTexture;
+    float backgroundScrollX;
+    float backgroundScrollSpeed;
+
+    Texture2D playerTexture;
+    Texture2D playerTextureEyesClosed;
+    float playerEyesClosedTimer; // Time left to display eyes closed
+    const float playerEyesClosedDuration = 0.33f; // Duration in seconds
+
+    float playerCollisionHeightRatio; // Ratio of collision box height to width (configurable)
+
+    Texture2D pipeTexture;
 };
