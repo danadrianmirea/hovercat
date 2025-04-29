@@ -29,6 +29,8 @@ Game::Game(int width, int height)
     pipeWidth = 80.0f;
     pipeGap = 200.0f;
     pipeSpeed = 200.0f;
+    basePipeSpeed = pipeSpeed;  // Store initial speed
+    speedLevel = 0;             // Start at level 0
     pipeSpawnTimer = 0.0f;
     pipeSpawnInterval = 2.0f;
 
@@ -79,8 +81,10 @@ void Game::Reset()
     // Clear all pipes
     pipes.clear();
     pipeSpawnTimer = 0.0f;
-    // Reset score
+    // Reset score and speed
     score = 0;
+    speedLevel = 0;
+    pipeSpeed = basePipeSpeed;
 }
 
 void Game::Update(float dt)
@@ -128,6 +132,7 @@ void Game::Update(float dt)
             if (birdX > pipe.x + pipeWidth && !pipe.scored) {
                 score++;
                 pipe.scored = true;
+                UpdatePipeSpeed();  // Check for speed increase after scoring
                 if (score > highScore) {
                     highScore = score;
                     SaveHighScore();
@@ -386,4 +391,13 @@ void Game::SaveHighScore()
         file.close();
     }
 #endif
+}
+
+void Game::UpdatePipeSpeed()
+{
+    int newSpeedLevel = score / 10;  // Calculate new speed level based on score
+    if (newSpeedLevel > speedLevel) {
+        speedLevel = newSpeedLevel;
+        pipeSpeed = basePipeSpeed + (speedLevel * 50.0f);  // Increase speed by 50 units per level
+    }
 }

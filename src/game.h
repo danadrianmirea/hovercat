@@ -65,7 +65,11 @@ private:
     float pipeWidth;
     float pipeGap;
     float pipeSpeed;
+    float basePipeSpeed;  // Store the initial pipe speed
+    int speedLevel;       // Track the current speed level
     std::vector<Pipe> pipes;
     float pipeSpawnTimer;
     float pipeSpawnInterval;
+
+    void UpdatePipeSpeed();  // Add function to update pipe speed
 };
