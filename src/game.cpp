@@ -70,15 +70,15 @@ Game::Game(int width, int height)
     this->height = height;
 
     // Background initialization
-    backgroundTexture = LoadTexture("data/background.jpg");
+    backgroundTexture = LoadTexture("Data/background.jpg");
     backgroundScrollX = 0.0f;
     backgroundScrollSpeed = 40.0f; 
-    playerTexture = LoadTexture("data/redkat_eyes_open.png");
-    playerTextureEyesClosed = LoadTexture("data/redkat_eyes_closed.png");
+    playerTexture = LoadTexture("Data/redkat_eyes_open.png");
+    playerTextureEyesClosed = LoadTexture("Data/redkat_eyes_closed.png");
     playerEyesClosedTimer = 0.0f;
     InitGame();
 
-    pipeTexture = LoadTexture("data/pipe.png");
+    pipeTexture = LoadTexture("Data/pipe.png");
 }
 
 Game::~Game()
@@ -250,20 +250,13 @@ void Game::Update(float dt)
 
 void Game::HandleInput()
 {
-    if(!isMobile) { // desktop and web controls
-        if(IsKeyPressed(KEY_SPACE)) {
-            playerVelocity = jumpForce;
-            playerEyesClosedTimer = playerEyesClosedDuration;
-            PlaySound(flySound);
-        }
-    } 
-    else // mobile controls
+    // Flap on keyboard or mobile tap
+    if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)
+        || (isMobile && IsGestureDetected(GESTURE_TAP)))
     {
-        if(IsGestureDetected(GESTURE_TAP)) {
-            playerVelocity = jumpForce;
-            playerEyesClosedTimer = playerEyesClosedDuration;
-            PlaySound(flySound);
-        }
+        playerVelocity = jumpForce;
+        PlaySound(flySound);
+        playerEyesClosedTimer = playerEyesClosedDuration;
     }
 }
 
@@ -484,7 +477,7 @@ void Game::DrawUI()
     float screenX = 0.0f;
     float screenY = 0.0f;
 
-    DrawTextEx(font, "Flappy Kat", {300, 10}, 44, 2, RED);
+    DrawTextEx(font, "Flappy Kat", {300, 10}, 44, 2, BLACK);
 
     // Draw score on the right side
     std::string scoreText = "Score: " + std::to_string(score);
@@ -493,8 +486,8 @@ void Game::DrawUI()
     int highScoreWidth = MeasureText(highScoreText.c_str(), 20);
     int rightPadding = 20;
     
-    DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, RED);
-    DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, RED);
+    DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, BLACK);
+    DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, BLACK);
 
     if (exitWindowRequested)
     {
@@ -503,16 +496,39 @@ void Game::DrawUI()
     }
     else if (firstTimeGameStart)
     {
-        DrawRectangleRounded({screenX + (float)(gameScreenWidth / 2 - 250), screenY + (float)(gameScreenHeight / 2 - 20), 500, 80}, 0.76f, 20, BLACK);
-        if (isMobile) {
-            DrawText("Tap to play", screenX + (gameScreenWidth / 2 - 60), screenY + gameScreenHeight / 2 + 10, 20, yellow);
-        } else {
-#ifndef EMSCRIPTEN_BUILD            
-            DrawText("Press Enter to play", screenX + (gameScreenWidth / 2 - 100), screenY + gameScreenHeight / 2 - 10, 20, yellow);
-            DrawText("Alt+Enter: toggle fullscreen", screenX + (gameScreenWidth / 2 - 120), screenY + gameScreenHeight / 2 + 30, 20, yellow);
+        DrawRectangleRounded(
+            {screenX + (float)(gameScreenWidth / 2 - 320), screenY + (float)(gameScreenHeight / 2 - 130), 700, 260},
+            0.76f, 20, BLACK
+        );
+
+        // Welcome and instructions
+        int y = (int)(screenY + (gameScreenHeight / 2 - 110));
+        DrawText("Welcome to Flappy Kat, a Raylib remake of Flappy Bird!", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
+        y += 40;
+        DrawText("Controls:", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
+        y += 30;
+        if(!isMobile) {
+            DrawText("- Press [Space], [W] or [Up Arrow] to flap", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 30;
+#ifndef EMSCRIPTEN_BUILD
+            DrawText("- Press [P] to pause", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 30;
+            DrawText("- Press [Esc] to exit", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 40;
+            DrawText("Press Enter to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);
+            y += 30;
+            DrawText("Alt+Enter: toggle fullscreen", (int)(screenX + (gameScreenWidth / 2 - 120)), y, 20, yellow);
 #else
-            DrawText("Press Enter to play", screenX + (gameScreenWidth / 2 - 100), screenY + gameScreenHeight / 2 + 10, 20, yellow);
+            DrawText("- Press [P] or [ESC] to pause", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 70;
+            DrawText("Press Enter to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);
+            y += 30;
+            DrawText("Alt+Enter: toggle fullscreen", (int)(screenX + (gameScreenWidth / 2 - 120)), y, 20, yellow);            
 #endif
+        } else {
+            DrawText("- Tap to flap", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 30+30+40;
+            DrawText("Tap to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);
         }
     }
     else if (paused)
