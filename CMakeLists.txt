@@ -50,6 +50,7 @@ endif()
 
 # Copy font files to build directory
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Font DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Data DESTINATION ${CMAKE_BINARY_DIR})
 
 # Create zip file of bin directory contents
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

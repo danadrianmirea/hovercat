@@ -19,6 +19,9 @@ Game::Game(int width, int height)
 {
     firstTimeGameStart = true;
 
+    // Initialize audio device
+    InitAudioDevice();
+
     // Initialize Flappy Bird variables
     birdSize = 30.0f;
     birdX = width / 4;
@@ -33,6 +36,14 @@ Game::Game(int width, int height)
     speedLevel = 0;             // Start at level 0
     pipeSpawnTimer = 0.0f;
     pipeSpawnInterval = 2.0f;
+
+    // Initialize sounds
+    gameMusic = LoadMusicStream("Data/music.mp3");
+    SetMusicVolume(gameMusic, 0.15f); 
+    flySound = LoadSound("Data/fly.mp3");
+    hitSound = LoadSound("Data/hit.mp3");
+    scoreSound = LoadSound("Data/ding.mp3");
+    musicPlaying = false;
 
     // Initialize score
     score = 0;
@@ -59,6 +70,13 @@ Game::~Game()
 {
     UnloadRenderTexture(targetRenderTex);
     UnloadFont(font);
+    // Unload sounds
+    UnloadMusicStream(gameMusic);
+    UnloadSound(flySound);
+    UnloadSound(hitSound);
+    UnloadSound(scoreSound);
+    // Close audio device
+    CloseAudioDevice();
 }
 
 void Game::InitGame()
@@ -85,6 +103,11 @@ void Game::Reset()
     score = 0;
     speedLevel = 0;
     pipeSpeed = basePipeSpeed;
+    // Stop music if playing
+    if (musicPlaying) {
+        StopMusicStream(gameMusic);
+        musicPlaying = false;
+    }
 }
 
 void Game::Update(float dt)
@@ -99,6 +122,19 @@ void Game::Update(float dt)
 
     bool running = (firstTimeGameStart == false && paused == false && lostWindowFocus == false && isInExitMenu == false && gameOver == false);
 
+    // Handle music playback
+    if (running && !musicPlaying) {
+        PlayMusicStream(gameMusic);
+        musicPlaying = true;
+    } else if (!running && musicPlaying) {
+        StopMusicStream(gameMusic);
+        musicPlaying = false;
+    }
+
+    if (musicPlaying) {
+        UpdateMusicStream(gameMusic);
+    }
+
     if (running)
     {
         HandleInput();
@@ -110,6 +146,11 @@ void Game::Update(float dt)
         // Check for collisions with screen boundaries
         if (birdY - birdSize/2 < 0 || birdY + birdSize/2 > height) {
             gameOver = true;
+            // Stop all sounds before playing hit sound
+            StopMusicStream(gameMusic);
+            StopSound(flySound);
+            StopSound(scoreSound);
+            PlaySound(hitSound);
             if (score > highScore) {
                 highScore = score;
                 SaveHighScore();
@@ -132,7 +173,8 @@ void Game::Update(float dt)
             if (birdX > pipe.x + pipeWidth && !pipe.scored) {
                 score++;
                 pipe.scored = true;
-                UpdatePipeSpeed();  // Check for speed increase after scoring
+                PlaySound(scoreSound);
+                UpdatePipeSpeed();
                 if (score > highScore) {
                     highScore = score;
                     SaveHighScore();
@@ -147,6 +189,11 @@ void Game::Update(float dt)
                     if (birdY - birdSize/2 < pipe.gapCenter - pipeGap/2 || 
                         birdY + birdSize/2 > pipe.gapCenter + pipeGap/2) {
                         gameOver = true;
+                        // Stop all sounds before playing hit sound
+                        StopMusicStream(gameMusic);
+                        StopSound(flySound);
+                        StopSound(scoreSound);
+                        PlaySound(hitSound);
                         if (score > highScore) {
                             highScore = score;
                             SaveHighScore();
@@ -168,12 +215,14 @@ void Game::HandleInput()
     if(!isMobile) { // desktop and web controls
         if(IsKeyPressed(KEY_SPACE)) {
             birdVelocity = jumpForce;
+            PlaySound(flySound);
         }
     } 
     else // mobile controls
     {
         if(IsGestureDetected(GESTURE_TAP)) {
             birdVelocity = jumpForce;
+            PlaySound(flySound);
         }
     }
 }

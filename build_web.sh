@@ -14,6 +14,7 @@ emcc src/*.cpp -o web-build/index.html \
   -s ALLOW_MEMORY_GROWTH=1 \
   -s STACK_SIZE=2097152 \
   --preload-file Font@/Font \
+  --preload-file Data@/Data \
   --shell-file custom_shell.html
 
 # Check if the emcc build was successful

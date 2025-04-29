@@ -71,5 +71,12 @@ private:
     float pipeSpawnTimer;
     float pipeSpawnInterval;
 
+    // Sound variables
+    Music gameMusic;
+    Sound flySound;
+    Sound hitSound;
+    Sound scoreSound;
+    bool musicPlaying;
+
     void UpdatePipeSpeed();  // Add function to update pipe speed
 };
