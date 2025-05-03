@@ -536,9 +536,7 @@ void Game::DrawUI()
 #else
             DrawText("- Press [P] or [ESC] to pause", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
             y += 70;
-            DrawText("Press Enter to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);
-            y += 30;
-            DrawText("Alt+Enter: toggle fullscreen", (int)(screenX + (gameScreenWidth / 2 - 120)), y, 20, yellow);            
+            DrawText("Press Enter to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);        
 #endif
         } else {
             DrawText("- Tap to flap", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
