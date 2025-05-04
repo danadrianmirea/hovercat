@@ -273,13 +273,16 @@ void Game::Update(float dt)
 
 void Game::HandleInput()
 {
-    // Flap on keyboard or mobile tap
-    if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)
-        || (isMobile && IsGestureDetected(GESTURE_TAP)))
-    {
-        playerVelocity = jumpForce;
-        PlaySound(flySound);
-        playerEyesClosedTimer = playerEyesClosedDuration;
+    // Only handle flap input if the game is running and not paused
+    if (!paused && !gameOver && !firstTimeGameStart && !isInExitMenu && !lostWindowFocus) {
+        // Flap on keyboard or mobile tap
+        if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)
+            || (isMobile && IsGestureDetected(GESTURE_TAP)))
+        {
+            playerVelocity = jumpForce;
+            PlaySound(flySound);
+            playerEyesClosedTimer = playerEyesClosedDuration;
+        }
     }
 }
 
