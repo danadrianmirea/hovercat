@@ -141,7 +141,10 @@ void Game::Update(float dt)
     }
 
     screenScale = MIN((float)GetScreenWidth() / gameScreenWidth, (float)GetScreenHeight() / gameScreenHeight);
-    UpdateUI();
+    bool skipFrame = UpdateUI();
+    if(skipFrame) {
+        return;
+    }
 
     bool running = (firstTimeGameStart == false && paused == false && lostWindowFocus == false && isInExitMenu == false && gameOver == false);
 
@@ -286,14 +289,14 @@ void Game::HandleInput()
     }
 }
 
-void Game::UpdateUI()
+bool Game::UpdateUI()
 {
 #ifndef EMSCRIPTEN_BUILD
     if (WindowShouldClose() || (IsKeyPressed(KEY_ESCAPE) && exitWindowRequested == false))
     {
         exitWindowRequested = true;
         isInExitMenu = true;
-        return;
+        return false;
     }
 
     if (IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT)))
@@ -361,11 +364,14 @@ void Game::UpdateUI()
             // Check if tap is in the title bar area
             if (tapPos.x >= 0 && tapPos.x < gameScreenWidth && tapPos.y >= 0 && tapPos.y < 100) {
                 paused = true;
+                return true;
             }
         } else if (paused && IsGestureDetected(GESTURE_TAP)) {
             paused = false;
+            return true;
         }
     }
+    return false;
 }
 
 void Game::Draw()

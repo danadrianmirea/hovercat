@@ -20,7 +20,7 @@ public:
     void Reset();
     void Update(float dt);
     void HandleInput();
-    void UpdateUI();
+    bool UpdateUI();
 
     void Draw();
     void DrawUI();
