@@ -90,6 +90,9 @@ private:
     float playerEyesClosedTimer; // Time left to display eyes closed
     const float playerEyesClosedDuration = 0.33f; // Duration in seconds
 
+    float gameOverDelayTimer; // Time left before allowing input after game over
+    const float gameOverDelayDuration = 0.5f; // Duration in seconds
+
     float playerCollisionWidthRatio; 
     float playerCollisionHeightRatio;
 

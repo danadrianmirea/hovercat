@@ -180,6 +180,7 @@ void Game::Update(float dt)
         // Check for collisions with screen boundaries using collision box
         if (playerY - collisionBoxHeight/2 < 0 || playerY + collisionBoxHeight/2 > height) {
             gameOver = true;
+            gameOverDelayTimer = gameOverDelayDuration; // Initialize delay timer
             // Stop all sounds before playing hit sound
             StopMusicStream(gameMusic);
             StopSound(flySound);
@@ -223,6 +224,7 @@ void Game::Update(float dt)
                     if (playerY - collisionBoxHeight/2 < pipe.gapCenter - pipeGap/2 || 
                         playerY + collisionBoxHeight/2 > pipe.gapCenter + pipeGap/2) {
                         gameOver = true;
+                        gameOverDelayTimer = gameOverDelayDuration; // Initialize delay timer
                         // Stop all sounds before playing hit sound
                         StopMusicStream(gameMusic);
                         StopSound(flySound);
@@ -245,6 +247,26 @@ void Game::Update(float dt)
         if (playerEyesClosedTimer > 0.0f) {
             playerEyesClosedTimer -= dt;
             if (playerEyesClosedTimer < 0.0f) playerEyesClosedTimer = 0.0f;
+        }
+    }
+
+    // Handle game over restart
+    if (gameOver) {
+        // Update game over delay timer
+        if (gameOverDelayTimer > 0.0f) {
+            gameOverDelayTimer -= dt;
+            if (gameOverDelayTimer < 0.0f) gameOverDelayTimer = 0.0f;
+        }
+        
+        // Only allow restart input after delay has passed
+        if (gameOverDelayTimer <= 0.0f) {
+            if (isMobile) {
+                if (IsGestureDetected(GESTURE_TAP)) {
+                    Reset();
+                }
+            } else if (IsKeyPressed(KEY_ENTER)) {
+                Reset();
+            }
         }
     }
 }
@@ -326,17 +348,6 @@ void Game::UpdateUI()
 #endif
     {
         paused = !paused;
-    }
-
-    // Handle game over restart
-    if (gameOver) {
-        if (isMobile) {
-            if (IsGestureDetected(GESTURE_TAP)) {
-                Reset();
-            }
-        } else if (IsKeyPressed(KEY_ENTER)) {
-            Reset();
-        }
     }
 
     // Handle pausing/unpausing on mobile with tap
