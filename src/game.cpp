@@ -359,10 +359,23 @@ bool Game::UpdateUI()
     // Handle pausing/unpausing on mobile with tap
     if (isMobile && !firstTimeGameStart && !gameOver && !exitWindowRequested) {
         if (!paused && IsGestureDetected(GESTURE_TAP)) {
-            // Get tap position
+            // Get tap position in screen space
             Vector2 tapPos = GetTouchPosition(0);
-            // Check if tap is in the title bar area
-            if (tapPos.x >= 0 && tapPos.x < gameScreenWidth && tapPos.y >= 0 && tapPos.y < 100) {
+            
+            // Transform tap position from screen space to game space
+            float screenOffsetX = (GetScreenWidth() - ((float)gameScreenWidth * screenScale)) * 0.5f;
+            float screenOffsetY = (GetScreenHeight() - ((float)gameScreenHeight * screenScale)) * 0.5f;
+            
+            // Convert screen coordinates to game coordinates
+            tapPos.x = (tapPos.x - screenOffsetX) / screenScale;
+            tapPos.y = (tapPos.y - screenOffsetY) / screenScale;
+            
+            // Measure "Flappy Kat" text dimensions
+            Vector2 textSize = MeasureTextEx(font, "Flappy Kat", 44, 2);
+            // Create a square area around the text (300 is the x position from DrawUI)
+            Rectangle titleArea = {300, 10, textSize.x, textSize.y};
+            // Check if tap is within the title area
+            if (CheckCollisionPointRec(tapPos, titleArea)) {
                 paused = true;
                 return true;
             }
