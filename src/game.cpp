@@ -706,6 +706,14 @@ void Game::SaveHighScore()
 void Game::UpdatePipeSpeed(float dt)
 {
     pipeSpeed += pipeSpeedIncrease * dt;  // Smooth speed increase over time 
+    if (pipeSpeed > maxSpeed) {
+        pipeSpeed = maxSpeed;
+    }
     pipeSpawnInterval = initialPipeDistance / pipeSpeed; // Adjust spawn interval to maintain constant distance between pipes
     backgroundScrollSpeed = pipeSpeed * 0.2f;  // Update background scroll speed to 20% of current pipe speed
+    
+    // Scale gravity and jump force with pipe speed
+    //float speedRatio = pipeSpeed / basePipeSpeed;  // How much faster we are compared to base speed
+    //gravity = defaultGravity * speedRatio;  // Scale gravity with speed
+    //jumpForce = defaultJumpForce * speedRatio;  // Scale jump force with speed
 }
