@@ -30,12 +30,12 @@ Game::Game(int width, int height)
     playerY = height / 2;
     playerVelocity = 0.0f;
     gravity = defaultGravity;
-    jumpForce = -400.0f;
-    pipeWidth = 80.0f;
-    pipeGap = 230.0f;
-    pipeSpeed = 200.0f;
+    jumpForce = defaultJumpForce;
+    pipeWidth = defaultPipeWidth;
+    pipeGap = defaultPipeGap;
+    pipeSpeed = defaultPipeSpeed;
     basePipeSpeed = pipeSpeed;  // Store initial speed
-    pipeSpawnInterval = 2.0f;
+    pipeSpawnInterval = defaultPipeSpawnInterval;
     pipeSpawnTimer = pipeSpawnInterval;  // Initialize to spawn interval to trigger immediate spawn
     initialPipeDistance = basePipeSpeed * pipeSpawnInterval;  // Store initial distance between pipes
     speedLevel = 0;             // Start at level 0
@@ -76,7 +76,7 @@ Game::Game(int width, int height)
     // Background initialization
     backgroundTexture = LoadTexture("Data/background.jpg");
     backgroundScrollX = 0.0f;
-    backgroundScrollSpeed = 40.0f; 
+    backgroundScrollSpeed = basePipeSpeed * 0.2f;  // Set initial scroll speed to 20% of pipe speed
     playerTexture = LoadTexture("Data/redkat_eyes_open.png");
     playerTextureEyesClosed = LoadTexture("Data/redkat_eyes_closed.png");
     playerEyesClosedTimer = 0.0f;
@@ -197,8 +197,25 @@ void Game::Update(float dt)
         pipeSpawnTimer += dt;
         if (pipeSpawnTimer >= pipeSpawnInterval) {
             pipeSpawnTimer = 0.0f;
-            float gapCenter = GetRandomValue(pipeGap/2, height - pipeGap/2);
-            pipes.push_back({(float)width, gapCenter, false});
+            
+            // Calculate the target gap center based on the previous pipe
+            float targetGapCenter;
+            if (pipes.empty()) {
+                // First pipe - place it in the middle
+                targetGapCenter = height / 2;
+            } else {
+                // Get the previous pipe's gap center
+                float prevGapCenter = pipes.back().gapCenter;
+                
+                // Calculate the minimum and maximum allowed gap center
+                float minGapCenter = MAX(pipeGap/2, prevGapCenter - maxGapHeightDifference);
+                float maxGapCenter = MIN(height - pipeGap/2, prevGapCenter + maxGapHeightDifference);
+                
+                // Randomly choose a new gap center within the allowed range
+                targetGapCenter = GetRandomValue(minGapCenter, maxGapCenter);
+            }
+            
+            pipes.push_back({(float)width, targetGapCenter, false});
         }
 
         // Move pipes and check collisions
@@ -690,4 +707,5 @@ void Game::UpdatePipeSpeed(float dt)
 {
     pipeSpeed += pipeSpeedIncrease * dt;  // Smooth speed increase over time 
     pipeSpawnInterval = initialPipeDistance / pipeSpeed; // Adjust spawn interval to maintain constant distance between pipes
+    backgroundScrollSpeed = pipeSpeed * 0.2f;  // Update background scroll speed to 20% of current pipe speed
 }

@@ -61,6 +61,11 @@ private:
     float playerSize;
     float playerVelocity;
     const float defaultGravity = 1200.0f;
+    const float defaultJumpForce = -400.0f;
+    const float defaultPipeSpeed = 400.0f;
+    const float defaultPipeSpawnInterval = 1.5f;
+    const float defaultPipeWidth = 80.0f;
+    const float defaultPipeGap = 230.0f;
     float gravity;
     float jumpForce;
     float pipeWidth;
@@ -82,6 +87,7 @@ private:
     bool musicManuallyDisabled;
 
     const float pipeSpeedIncrease = 10.0f;  // Speed increase per second
+    const float maxGapHeightDifference = 150.0f;  // Maximum allowed vertical distance between consecutive pipe gaps
     void UpdatePipeSpeed(float dt);  // Add function to update pipe speed
 
     // Background scrolling
