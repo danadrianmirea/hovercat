@@ -35,9 +35,10 @@ Game::Game(int width, int height)
     pipeGap = 230.0f;
     pipeSpeed = 200.0f;
     basePipeSpeed = pipeSpeed;  // Store initial speed
-    speedLevel = 0;             // Start at level 0
-    pipeSpawnTimer = 0.0f;
     pipeSpawnInterval = 2.0f;
+    pipeSpawnTimer = pipeSpawnInterval;  // Initialize to spawn interval to trigger immediate spawn
+    initialPipeDistance = basePipeSpeed * pipeSpawnInterval;  // Store initial distance between pipes
+    speedLevel = 0;             // Start at level 0
 
     // Initialize sounds
     gameMusic = LoadMusicStream("Data/music.mp3");
@@ -124,6 +125,7 @@ void Game::Reset()
     // Clear all pipes
     pipes.clear();
     pipeSpawnTimer = 0.0f;
+    pipeSpawnInterval = 2.0f;
     // Reset score and speed
     score = 0;
     speedLevel = 0;
@@ -165,6 +167,8 @@ void Game::Update(float dt)
     if (running)
     {
         HandleInput();
+
+        UpdatePipeSpeed(dt);
         
         // Update player physics
         playerVelocity += gravity * dt;
@@ -200,13 +204,11 @@ void Game::Update(float dt)
         // Move pipes and check collisions
         for (auto& pipe : pipes) {
             pipe.x -= pipeSpeed * dt;
-
             // Check if player has passed the pipe
             if (playerX > pipe.x + pipeWidth && !pipe.scored) {
                 score++;
                 pipe.scored = true;
                 PlaySound(scoreSound);
-                UpdatePipeSpeed();
                 if (score > highScore) {
                     highScore = score;
                     SaveHighScore();
@@ -551,12 +553,15 @@ void Game::DrawUI()
     // Draw score on the right side
     std::string scoreText = "Score: " + std::to_string(score);
     std::string highScoreText = "High Score: " + std::to_string(highScore);
+    std::string speedText = "Speed: " + std::to_string((int)pipeSpeed);
     int scoreWidth = MeasureText(scoreText.c_str(), 20);
     int highScoreWidth = MeasureText(highScoreText.c_str(), 20);
+    int speedWidth = MeasureText(speedText.c_str(), 20);
     int rightPadding = 20;
     
     DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, BLACK);
     DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, BLACK);
+    DrawText(speedText.c_str(), width - speedWidth - rightPadding, 80, 20, BLACK);
 
     if(!isMobile) {
         // Draw music toggle instruction at the bottom
@@ -681,11 +686,8 @@ void Game::SaveHighScore()
 #endif
 }
 
-void Game::UpdatePipeSpeed()
+void Game::UpdatePipeSpeed(float dt)
 {
-    int newSpeedLevel = score / 10;  // Calculate new speed level based on score
-    if (newSpeedLevel > speedLevel) {
-        speedLevel = newSpeedLevel;
-        pipeSpeed = basePipeSpeed + (speedLevel * 50.0f);  // Increase speed by 50 units per level
-    }
+    pipeSpeed += pipeSpeedIncrease * dt;  // Smooth speed increase over time 
+    pipeSpawnInterval = initialPipeDistance / pipeSpeed; // Adjust spawn interval to maintain constant distance between pipes
 }

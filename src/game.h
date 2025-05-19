@@ -66,6 +66,7 @@ private:
     float pipeGap;
     float pipeSpeed;
     float basePipeSpeed;  // Store the initial pipe speed
+    float initialPipeDistance;  // Store the initial distance between pipes
     int speedLevel;       // Track the current speed level
     std::vector<Pipe> pipes;
     float pipeSpawnTimer;
@@ -79,7 +80,8 @@ private:
     bool musicPlaying;
     bool musicManuallyDisabled;
 
-    void UpdatePipeSpeed();  // Add function to update pipe speed
+    const float pipeSpeedIncrease = 10.0f;  // Speed increase per second
+    void UpdatePipeSpeed(float dt);  // Add function to update pipe speed
 
     // Background scrolling
     Texture2D backgroundTexture;
