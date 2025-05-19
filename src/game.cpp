@@ -370,8 +370,8 @@ bool Game::UpdateUI()
             tapPos.x = (tapPos.x - screenOffsetX) / screenScale;
             tapPos.y = (tapPos.y - screenOffsetY) / screenScale;
             
-            // Measure "Flappy Kat" text dimensions
-            Vector2 textSize = MeasureTextEx(font, "Flappy Kat", 44, 2);
+            // Measure "FlapKat" text dimensions
+            Vector2 textSize = MeasureTextEx(font, "FlapKat", 44, 2);
             // Create a square area around the text (300 is the x position from DrawUI)
             Rectangle titleArea = {300, 10, textSize.x, textSize.y};
             // Check if tap is within the title area
@@ -525,7 +525,7 @@ void Game::DrawUI()
     float screenX = 0.0f;
     float screenY = 0.0f;
 
-    DrawTextEx(font, "Flappy Kat", {300, 10}, 44, 2, BLACK);
+    DrawTextEx(font, "FlapKat", {300, 10}, 44, 2, BLACK);
 
     // Draw score on the right side
     std::string scoreText = "Score: " + std::to_string(score);
@@ -551,7 +551,7 @@ void Game::DrawUI()
 
         // Welcome and instructions
         int y = (int)(screenY + (gameScreenHeight / 2 - 110));
-        DrawText("Welcome to Flappy Kat, a Raylib remake of Flappy Bird!", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
+        DrawText("Welcome to FlapKat, a Raylib remake of Flappy Bird!", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
         y += 40;
         DrawText("Controls:", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
         y += 30;

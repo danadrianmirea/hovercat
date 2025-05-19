@@ -1,4 +1,4 @@
-# Flappy Kat
+# FlapKat
 
 A modern, cross-platform remake of Flappy Bird using [raylib](https://www.raylib.com/).
 
