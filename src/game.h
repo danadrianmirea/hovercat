@@ -77,6 +77,7 @@ private:
     Sound hitSound;
     Sound scoreSound;
     bool musicPlaying;
+    bool musicManuallyDisabled;
 
     void UpdatePipeSpeed();  // Add function to update pipe speed
 

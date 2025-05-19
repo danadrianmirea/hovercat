@@ -45,7 +45,9 @@ Game::Game(int width, int height)
     flySound = LoadSound("Data/fly.mp3");
     hitSound = LoadSound("Data/hit.mp3");
     scoreSound = LoadSound("Data/ding.mp3");
-    musicPlaying = false;
+    musicPlaying = false;  // Start with music off
+    musicManuallyDisabled = false;  // Initialize as not manually disabled
+    // Don't start music immediately, wait for game to begin
 
     // Initialize score
     score = 0;
@@ -126,10 +128,11 @@ void Game::Reset()
     score = 0;
     speedLevel = 0;
     pipeSpeed = basePipeSpeed;
-    // Stop music if playing
-    if (musicPlaying) {
-        StopMusicStream(gameMusic);
-        musicPlaying = false;
+    
+    // Only restart music if it wasn't manually disabled
+    if (!musicManuallyDisabled) {
+        PlayMusicStream(gameMusic);
+        musicPlaying = true;
     }
 }
 
@@ -284,9 +287,11 @@ void Game::HandleInput()
         if (musicPlaying) {
             PauseMusicStream(gameMusic);
             musicPlaying = false;
+            musicManuallyDisabled = true;  // Player manually disabled music
         } else {
             PlayMusicStream(gameMusic);
             musicPlaying = true;
+            musicManuallyDisabled = false;  // Player manually enabled music
         }
     }
 }
@@ -320,10 +325,16 @@ bool Game::UpdateUI()
         if(isMobile) {
             if(IsGestureDetected(GESTURE_TAP)) {
                 firstTimeGameStart = false;
+                // Start music when game begins
+                PlayMusicStream(gameMusic);
+                musicPlaying = true;
             }
         }
         else if(IsKeyDown(KEY_ENTER)) {
             firstTimeGameStart = false;
+            // Start music when game begins
+            PlayMusicStream(gameMusic);
+            musicPlaying = true;
         }
     }
 
@@ -547,6 +558,13 @@ void Game::DrawUI()
     DrawText(scoreText.c_str(), width - scoreWidth - rightPadding, 20, 20, BLACK);
     DrawText(highScoreText.c_str(), width - highScoreWidth - rightPadding, 50, 20, BLACK);
 
+    if(!isMobile) {
+        // Draw music toggle instruction at the bottom
+        const char* musicText = "Press M to toggle music";
+        int musicTextWidth = MeasureText(musicText, 20);
+        DrawText(musicText, (gameScreenWidth - musicTextWidth)/2, gameScreenHeight - 30, 20, BLACK);
+    }
+
     if (exitWindowRequested)
     {
         DrawRectangleRounded({screenX + (float)(gameScreenWidth / 2 - 250), screenY + (float)(gameScreenHeight / 2 - 20), 500, 60}, 0.76f, 20, BLACK);
@@ -555,7 +573,7 @@ void Game::DrawUI()
     else if (firstTimeGameStart)
     {
         DrawRectangleRounded(
-            {screenX + (float)(gameScreenWidth / 2 - 320), screenY + (float)(gameScreenHeight / 2 - 130), 700, 260},
+            {screenX + (float)(gameScreenWidth / 2 - 320), screenY + (float)(gameScreenHeight / 2 - 130), 700, 300},
             0.76f, 20, BLACK
         );
 
@@ -572,12 +590,16 @@ void Game::DrawUI()
             DrawText("- Press [P] to pause", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
             y += 30;
             DrawText("- Press [Esc] to exit", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 30;
+            DrawText("- Press [M] to toggle music", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
             y += 40;
             DrawText("Press Enter to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);
             y += 30;
             DrawText("Alt+Enter: toggle fullscreen", (int)(screenX + (gameScreenWidth / 2 - 120)), y, 20, yellow);
 #else
             DrawText("- Press [P] or [ESC] to pause", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
+            y += 30;
+            DrawText("- Press [M] to toggle music", (int)(screenX + (gameScreenWidth / 2 - 220)), y, 20, WHITE);
             y += 70;
             DrawText("Press Enter to play", (int)(screenX + (gameScreenWidth / 2 - 100)), y, 20, yellow);        
 #endif
