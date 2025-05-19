@@ -155,15 +155,6 @@ void Game::Update(float dt)
             backgroundScrollX -= backgroundTexture.width;
     }
 
-    // Handle music playback
-    if (running && !musicPlaying) {
-        PlayMusicStream(gameMusic);
-        musicPlaying = true;
-    } else if (!running && musicPlaying) {
-        StopMusicStream(gameMusic);
-        musicPlaying = false;
-    }
-
     if (musicPlaying) {
         UpdateMusicStream(gameMusic);
     }
@@ -285,6 +276,17 @@ void Game::HandleInput()
             playerVelocity = jumpForce;
             PlaySound(flySound);
             playerEyesClosedTimer = playerEyesClosedDuration;
+        }
+    }
+
+    // Handle music toggle with M key
+    if (IsKeyPressed(KEY_M)) {
+        if (musicPlaying) {
+            PauseMusicStream(gameMusic);
+            musicPlaying = false;
+        } else {
+            PlayMusicStream(gameMusic);
+            musicPlaying = true;
         }
     }
 }
