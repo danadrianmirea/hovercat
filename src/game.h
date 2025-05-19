@@ -60,6 +60,7 @@ private:
     float playerY;
     float playerSize;
     float playerVelocity;
+    const float defaultGravity = 1200.0f;
     float gravity;
     float jumpForce;
     float pipeWidth;

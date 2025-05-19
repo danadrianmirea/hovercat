@@ -29,7 +29,7 @@ Game::Game(int width, int height)
     playerX = width / 4;
     playerY = height / 2;
     playerVelocity = 0.0f;
-    gravity = 800.0f;
+    gravity = defaultGravity;
     jumpForce = -400.0f;
     pipeWidth = 80.0f;
     pipeGap = 230.0f;
