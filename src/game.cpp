@@ -370,10 +370,8 @@ bool Game::UpdateUI()
             tapPos.x = (tapPos.x - screenOffsetX) / screenScale;
             tapPos.y = (tapPos.y - screenOffsetY) / screenScale;
             
-            // Measure "FlapKat" text dimensions
-            Vector2 textSize = MeasureTextEx(font, "FlapKat", 44, 2);
-            // Create a square area around the text (300 is the x position from DrawUI)
-            Rectangle titleArea = {300, 10, textSize.x, textSize.y};
+            // Create a rectangle at the top of the screen
+            Rectangle titleArea = {0, 0, (float)width, 100};
             // Check if tap is within the title area
             if (CheckCollisionPointRec(tapPos, titleArea)) {
                 paused = true;
@@ -525,7 +523,17 @@ void Game::DrawUI()
     float screenX = 0.0f;
     float screenY = 0.0f;
 
-    DrawTextEx(font, "FlapKat", {300, 10}, 44, 2, BLACK);
+    if(isMobile) {
+        // Draw pause rectangle area at the top of the screen
+        Color grayTransparent = {128, 128, 128, 8}; // Semi-transparent gray
+        DrawRectangle(0, 0, gameScreenWidth, 100, grayTransparent);
+        
+        // Draw centered "Tap to pause" text
+        const char* text = "Tap to pause";
+        int fontSize = 20;
+        int textWidth = MeasureText(text, fontSize);
+        DrawText(text, (gameScreenWidth - textWidth)/2, 40, fontSize, BLACK);
+    }
 
     // Draw score on the right side
     std::string scoreText = "Score: " + std::to_string(score);
