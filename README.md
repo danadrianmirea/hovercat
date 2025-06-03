@@ -2,6 +2,8 @@
 
 A modern, cross-platform remake of Flappy Bird using [raylib](https://www.raylib.com/).
 
+Play on itch.io: https://adrianmirea.itch.io/
+
 ---
 
 ## Features
