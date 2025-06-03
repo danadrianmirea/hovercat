@@ -17,7 +17,7 @@ void mainLoop()
 
 int main()
 {
-    InitWindow(gameScreenWidth, gameScreenHeight, "FlapKat");
+    InitWindow(gameScreenWidth, gameScreenHeight, "Hovercat");
 #ifndef EMSCRIPTEN_BUILD
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 #endif

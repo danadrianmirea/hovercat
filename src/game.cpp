@@ -601,7 +601,7 @@ void Game::DrawUI()
 
         // Welcome and instructions
         int y = (int)(screenY + (gameScreenHeight / 2 - 110));
-        DrawText("Welcome to FlapKat, a Raylib remake of Flappy Bird!", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
+        DrawText("Welcome to Hovercat", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
         y += 40;
         DrawText("Controls:", (int)(screenX + (gameScreenWidth / 2 - 260)), y, 20, yellow);
         y += 30;

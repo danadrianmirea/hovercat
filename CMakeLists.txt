@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(flappy_kat VERSION 1.0)
+project(hovercat VERSION 1.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 14)

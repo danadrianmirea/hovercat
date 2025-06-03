@@ -53,6 +53,12 @@
 			"typeinfo": "cpp"
 		},
 		"git.autoRepositoryDetection": false,
-		"git.enabled": false
+		"git.enabled": false,
+		"cmake.configureOnOpen": true,
+		"cmake.buildDirectory": "${workspaceFolder}/build",
+		"cmake.installPrefix": "${workspaceFolder}/build/install",
+		"cmake.configureSettings": {
+			"RAYLIB_PATH": "C:/raylib/raylib"
+		}
 	}
 }
