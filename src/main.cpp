@@ -20,6 +20,7 @@ int main()
     InitWindow(gameScreenWidth, gameScreenHeight, "Hovercat");
 #ifndef EMSCRIPTEN_BUILD
     SetWindowState(FLAG_WINDOW_RESIZABLE);
+    ToggleBorderlessWindowed();
 #endif
     SetExitKey(KEY_NULL);
     SetTargetFPS(144);
